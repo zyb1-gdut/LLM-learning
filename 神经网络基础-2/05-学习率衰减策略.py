@@ -22,7 +22,7 @@ def demo():
     # optimizer: 优化器对象，用于更新模型参数
     # step_size: 学习率衰减的间隔步数，每经过step_size个epoch执行一次衰减
     # gamma: 学习率衰减因子，新的学习率 = 当前学习率 * gamma
-    # scheduler = torch.optim.lr_scheduler.StepLR(optimizer,step_size=50,gamma=0.5)
+    scheduler = torch.optim.lr_scheduler.StepLR(optimizer,step_size=50,gamma=0.5)
 
     # 学习率_指定间隔下降策略
     # milestones用来指定在什么地方进行学习率的衰减
@@ -30,7 +30,7 @@ def demo():
     # scheduler = torch.optim.lr_scheduler.MultiStepLR(optimizer,milestones=milestones,gamma=0.5)
 
     # 学习率_指数学习率策略
-    scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer,gamma=0.95)
+    #scheduler = torch.optim.lr_scheduler.ExponentialLR(optimizer,gamma=0.95)
 
     # 训练的总轮次
     epochs = 200
