@@ -17,8 +17,8 @@ def create_data():
     x = data_df.iloc[:,:-1]
     y = data_df.iloc[:,-1]
 
-    # 查看4种手机价格对应的数据条数。目的：是检查数据是否均衡，如果不均衡，推荐下面的stratify设置为True
-    # print(y.value_counts())
+    # 查看4种手机价格对应的数据条数。目的：是检查数据是否均衡，如果不均衡，推荐下面的stratify设置为True，确保每款手机在训练集中样本也一样多
+    print(y.value_counts())
     # 3- 划分训练集和测试集
     # 将数据集划分为训练集和测试集
     # x: 特征数据，用于训练和测试
@@ -43,7 +43,7 @@ def create_data():
         否则会报如下的异常：
         RuntimeError: mat1 and mat2 must have the same dtype, but got Double and Float
     """
-    # 下面两行给没有标准化处理使用
+    # 下面两行给没有标准化处理使用，.values 的作用：把这张“带表头、带索引的表格”，剥去外壳，只留下里面的“纯数字矩阵”（NumPy 数组）。
     # train_dataset = TensorDataset(torch.tensor(x_train.values,dtype=torch.float32),torch.tensor(y_train.values,dtype=torch.int64))
     # test_dataset = TensorDataset(torch.tensor(x_test.values,dtype=torch.float32),torch.tensor(y_test.values,dtype=torch.int64))
 
@@ -123,7 +123,9 @@ def train_model(train_dataset,features, targets):
             loss = criterion(y_pred,y_train_tmp)
 
             # 累计损失值【了解】
-            total_loss += loss.item() * len(x_train_tmp)
+            total_loss += loss.item() * len(x_train_tmp)#如果不乘（直接 total_loss += loss.item()）：
+            #你相当于给最后那 2 条数据和前面 8 条数据赋予了同等的权重。最后计算平均损失时，
+            # 那 2 条“小批次”会被放大成和 8 条一样大的影响力，导致平均损失计算严重失真。
             total_sample_num += len(x_train_tmp)
 
             # 梯度清零、反向传播、更新参数【固定写法】
@@ -145,7 +147,7 @@ def predict_model(test_dataset,features,targets):
 
     # 2- 将数据封装为DataLoader
     dataloader = DataLoader(test_dataset,batch_size=3,shuffle=False)
-
+    #训练集打乱（shuffle=True）是为了“防背诵”，测试集固定（shuffle=False）是为了“保准确”
     # 3- 进行预测
     correct_count = 0 # 预测正确的样本条数
     for x_test,y_test in dataloader:
@@ -168,7 +170,7 @@ def predict_model(test_dataset,features,targets):
         # print("预测结果：",torch.argmax(y_pred,dim=1))
         # print("真实结果：",y_test)
 
-        y_pred_target = torch.argmax(y_pred,dim=1)
+        y_pred_target = torch.argmax(y_pred,dim=1)#argmax 是 “返回最大值所在的索引位置”。
         correct_count =  correct_count + (y_pred_target==y_test).sum()
 
     # 最终的准确率
