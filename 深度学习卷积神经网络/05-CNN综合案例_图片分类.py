@@ -74,13 +74,13 @@ class ImgCNNModel(nn.Module):
             池化层中输出的结果不是二维的，但是全连接层只能处理二维数据 [样本数据条数,一条样本的特征个数]
             x.size(0)：取的是传递进来的这一批次的图片张数。注意：值最小为1
         """
-        print("特征图修改前的形状",x.shape)
+        #print("特征图修改前的形状",x.shape)
         # 将输入张量x重塑为二维矩阵形式
         # 第一维保持不变，第二维展平所有剩余维度
         # 例如：形状为(batch_size, channels, height, width)的张量
         # 会被重塑为(batch_size, channels*height*width)的二维张量
         x = x.reshape(x.size(0), -1)
-        print("特征图修改后的形状",x.shape)
+        #print("特征图修改后的形状",x.shape)
 
         # 全连接层
         x = torch.relu(self.linear1(x))
@@ -106,8 +106,8 @@ def train_model(train_data):
     dataloader = DataLoader(train_data,batch_size=8,shuffle=True, drop_last=True)
 
     # 2- 创建神经网络实例对象
-    model = ImgCNNModel()
 
+    model = ImgCNNModel().to(device)
     # 3- 创建损失函数
     criterion = nn.CrossEntropyLoss()
 
@@ -116,7 +116,7 @@ def train_model(train_data):
 
     # 5- 训练数据
     # epochs = 10
-    epochs = 1
+    epochs = 20
     for epoch in range(epochs):
 
         start_time = time.time() # 用于统计训练耗时
@@ -125,15 +125,17 @@ def train_model(train_data):
         total_loss_value = 0.0 # 每轮次的总损失
         total_sample_count = 0 # 每轮次的总训练样本条数
 
+
         for x_train,y_train in dataloader:
             # 模式切换
             model.train()
-
+            x_train = x_train.to(device)
+            y_train = y_train.to(device)
             # 预测
             y_pred = model(x_train)
             # 计算损失
             loss = criterion(y_pred,y_train)
-            print(f"当前{count}批次的平均损失值{loss}")
+            #print(f"当前{count}批次的平均损失值{loss}")
             count += 1
 
             # 累计总损失和总样本条数
@@ -152,8 +154,11 @@ def train_model(train_data):
 
 def predict_model(test_data):
     # 1- 加载训练好的模型
-    model = ImgCNNModel()
-    model.load_state_dict(torch.load("model/img.pt"))
+    model = ImgCNNModel().to(device)
+    model.load_state_dict(torch.load("model/img.pt",map_location=device))
+
+    # 将模式切换为预测模式
+    model.eval()
 
     # 2- 将数据封装为DataLoader
     dataloader = DataLoader(test_data,batch_size=8)
@@ -161,9 +166,9 @@ def predict_model(test_data):
     # 3- 进行预测
     correct = 0 # 预测正确的样本条数
     for x_test,y_test in dataloader:
-        # 将模式切换为预测模式
-        model.eval()
-
+        #统一运行设备，到GPU进行运算
+        x_test = x_test.to(device)
+        y_test = y_test.to(device)
         # 预测
         y_pred = model(x_test)
         # print("原始的线性求和结果",y_pred)
@@ -178,7 +183,7 @@ def predict_model(test_data):
         #
         # break
 
-    print("最终的预测准确度",correct/len(test_data))
+    print(f"最终的预测准确度:{correct/len(test_data):.2f}")
 
 if __name__ == '__main__':
     # 1- 准备数据
@@ -200,8 +205,8 @@ if __name__ == '__main__':
     # model = ImgCNNModel()
     # model = model.to(device)
     # summary(model,input_size=(3,32,32),batch_size=1)
-    #
-    # 3- 训练模型
+
+    # #3- 训练模型
     # train_model(train)
 
     # 4- 模型预测和评估
