@@ -70,7 +70,6 @@ def create_data():
     """
         unique_words：去重以后的词列表
         word_dict：去重以后的词和索引的字典形式
-        corpus_idx：将所有歌词以索引替换并且以40代表的空格分隔以后的完整内容
         len(unique_words)：去重以后词的个数
     """
     return unique_words,word_dict,corpus_idx,len(unique_words)
