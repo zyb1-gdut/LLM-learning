@@ -1,5 +1,10 @@
 #导入相关的包
+#from urllib import response
+
 import ollama
+from pprint import pprint
+
+#from 私有化部署大模型聊天机器人.chat_v2.my_chat import message
 
 #few-shot 示例
 class_examples = {
@@ -24,6 +29,8 @@ def inference(
         sentences:list,
         custom_settings:dict
 ):
+    response = []
+    i = 0
     for sentence in sentences:
         sentence_with_prompt = f"“{sentence}”是{custom_settings['class_list']}里的哪一个类别？"
         #注意这里的sentence左右两边的是中文引号，用来括起句子。
@@ -31,11 +38,43 @@ def inference(
                                messages =[*custom_settings['pre_history'],
                                           {'role':'user','content':sentence_with_prompt}]
                                )
-        response = classify["message"]["content"]
+        '''
+        #应对非法类别的方法
+        
+        text_label = [
+            "新闻报道",
+            "\n新闻报道\n",
+            "这是新闻报道，因为它描述了央行降息。",
+            "财经新闻"
+        ]
+        #处理非法类别
+        raw_output = text_label[i]
 
-        print(sentence)
-        print(response)
-        print('-'*40)
+        label = raw_output.strip()
+        i += 1
+        if label in custom_settings['class_list']:
+            response.append({
+                'text': sentence,
+                'label': label,
+                'status':'成功',
+                'raw_output':raw_output
+            })
+        else:
+            response.append({
+                'text': sentence,
+                'label': None,
+                'status':'待人工确认',
+                'raw_output':raw_output
+            })'''
+        response.append({
+            'text':sentence,
+            'label':classify['message']['content']
+        })
+
+        #print(response)
+        #print(custom_settings['pre_history'])
+        #print('-'*40)
+    return response
 
 if __name__ == '__main__':
     sentences = [
@@ -46,7 +85,13 @@ if __name__ == '__main__':
     ]
 
     custom_settings = init_prompts()
-    inference(
+    results = inference(
         sentences=sentences,
         custom_settings=custom_settings
     )
+    pprint(results,width=120,sort_dicts=False)
+
+    # print("结果数量：", len(results))
+    # print("第一条结果的类型：", type(results[0]))
+    # print("第一条原文：", results[0]["text"])
+    # print("第一条分类：", results[0]["label"])
