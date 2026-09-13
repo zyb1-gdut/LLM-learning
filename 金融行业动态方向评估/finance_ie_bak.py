@@ -56,12 +56,13 @@ def clean_response(response: str):
     """
     # response1='```json["name":lucy]```abc```json["name":lucy]```'
     if '```json' in response:
+        #从 response 这个字符串中，提取出所有被 ```json 和 ``` 包裹起来的内容（通常是 JSON 格式的文本），并且支持跨多行匹配。
         res = re.findall(r'```json(.*?)```',response,re.DOTALL)
         print(f're----->{re}')
         if len(res) and res[0]:
             response = res[0]
     response.replace('、',',')
-    print(f'response----->{response}')
+    #print(f'response----->{response}')
     try:
         return json.loads(response)
     except:
@@ -85,16 +86,16 @@ def inference(
             print(f'The type model inferences {cls_res} which is not in schema dict,exited.')
             exit()
         properties_str = ','.join(schema[cls_res])
-        print(f'properties_str----->{properties_str}')
+        #print(f'properties_str----->{properties_str}')
         schema_str_list = f'“{cls_res}”({properties_str})'
-        print(f'properties_str----->{properties_str}')
+        print(f'schema_str_list----->{schema_str_list}')
         sentence_with_ie_prompt = IE_PATTERN.format(sentence,schema_str_list)
         messages = [*custom_settings['ie_pre_history'],{'role':'user','content':sentence_with_ie_prompt}]
-        print(f'properties_str----->{properties_str}')
-        response = ollama.chat(model='qwen3:8b',messages=messages)
-        print(f'response----->{response}')
+        #print(f'messages----->{messages}')
+        response = ollama.chat(model='qwen2:1.5b',messages=messages)
+        #print(f'response----->{response}')
         res_content = response['message']['content']
-        print(f'properties_str----->{properties_str}')
+        #print(f'res_content----->{res_content}')
         ie_res = clean_response(res_content)
         print(f'sentence:{sentence}')
         print(f'inference answer:{ie_res}')
